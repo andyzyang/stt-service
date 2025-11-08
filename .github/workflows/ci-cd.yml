@@ -21,11 +21,14 @@ jobs:
         run: bash scripts/download_model.sh ./model
       - name: Run unit tests
         run: |
+          export PYTHONPATH=$PYTHONPATH:$(pwd)
           pytest -q -m "not integration"
       - name: Run integration tests
         env:
           VOSK_MODEL_PATH: ./model
-        run: pytest -q -m integration
+        run: |
+          export PYTHONPATH=$PYTHONPATH:$(pwd)
+          pytest -q -m integration
 
   build-and-push-image:
     needs: build-and-test
@@ -47,6 +50,8 @@ jobs:
     needs: build-and-push-image
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
+    env:
+      DEPLOY_USER: ubuntu
     steps:
       - name: Download image artifact
         uses: actions/download-artifact@v5
@@ -61,7 +66,7 @@ jobs:
           scp stt-service.tar ${DEPLOY_USER}@${{ secrets.DEPLOY_HOST }}:~/stt-service.tar
       - name: Copy model script to server
         run: |
-          scp scripts/download_model.sh ${DEPLOY_HOST}@${{ secrets.DEPLOY_HOST }}:~/download_model.sh
+          scp scripts/download_model.sh ${DEPLOY_USER}@${{ secrets.DEPLOY_HOST }}:~/download_model.sh
       - name: Prepare model on server
         run: |
           ssh ${DEPLOY_USER}@${{ secrets.DEPLOY_HOST }} << 'EOF'
