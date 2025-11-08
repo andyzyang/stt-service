@@ -19,6 +19,9 @@ jobs:
           pip install -r app/requirements.txt
       - name: Download Vosk model for tests
         run: bash scripts/download_model.sh ./model
+      - name: Install ffmpeg
+        run: |
+          sudo apt-get update && sudo apt-get install -y ffmpeg
       - name: Run unit tests
         run: |
           export PYTHONPATH=$PYTHONPATH:$(pwd)
