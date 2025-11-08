@@ -87,10 +87,12 @@ jobs:
           EOF
       - name: Load and restart docker-compose on server
         run: |
-          ssh ${DEPLOY_USER}@${{ secrets.DEPLOY_HOST }} << 'EOF'
+          ssh ${DEPLOY_USER}@${{ secrets.DEPLOY_HOST }} << EOF
           set -e
           sudo docker system prune -af || true
           sudo docker load -i ~/stt-service.tar
+
+          DEPLOY_USER="${DEPLOY_USER}"
           mkdir -p ~/stt-deploy && cd ~/stt-deploy
           cat > docker-compose.yml <<YAML
           version: "3.8"
