@@ -89,6 +89,7 @@ jobs:
         run: |
           ssh ${DEPLOY_USER}@${{ secrets.DEPLOY_HOST }} << 'EOF'
           set -e
+          sudo docker system prune -af || true
           sudo docker load -i ~/stt-service.tar
           mkdir -p ~/stt-deploy && cd ~/stt-deploy
           cat > docker-compose.yml <<YAML
