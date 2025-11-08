@@ -64,6 +64,11 @@ jobs:
         uses: webfactory/ssh-agent@v0.9.1
         with:
           ssh-private-key: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
+      - name: Setup SSH known hosts
+        run: |
+          mkdir -p ~/.ssh
+          echo "StrictHostKeyChecking no" >> ~/.ssh/config
+          chmod 600 ~/.ssh/config
       - name: Copy image to server
         run: |
           scp stt-service.tar ${DEPLOY_USER}@${{ secrets.DEPLOY_HOST }}:~/stt-service.tar
