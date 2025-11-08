@@ -91,7 +91,7 @@ jobs:
           set -e
           sudo docker load -i ~/stt-service.tar
           mkdir -p ~/stt-deploy && cd ~/stt-deploy
-          cat > docker-compose.yml <<'YAML'
+          cat > docker-compose.yml <<YAML
           version: "3.8"
           services:
             stt:
