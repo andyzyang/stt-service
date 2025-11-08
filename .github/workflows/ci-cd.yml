@@ -88,21 +88,21 @@ jobs:
       - name: Load and restart docker-compose on server
         run: |
           ssh ${DEPLOY_USER}@${{ secrets.DEPLOY_HOST }} << 'EOF'
-            set -e
-            sudo docker load -i ~/stt-service.tar
-            mkdir -p ~/stt-deploy && cd ~/stt-deploy
-            cat > docker-compose.yml <<'YAML'
-            version: "3.8"
-            services:
-              stt:
-                image: stt-service:latest
-                restart: unless-stopped
-                ports:
-                  - "8000:8000"
-                environment:
-                  - VOSK_MODEL_PATH=/model
-                volumes:
-                  - /home/${DEPLOY_USER}/model:/model:ro
-            YAML
-            sudo docker compose up -d --remove-orphans --build
+          set -e
+          sudo docker load -i ~/stt-service.tar
+          mkdir -p ~/stt-deploy && cd ~/stt-deploy
+          cat > docker-compose.yml <<'YAML'
+          version: "3.8"
+          services:
+            stt:
+              image: stt-service:latest
+              restart: unless-stopped
+              ports:
+                - "8000:8000"
+              environment:
+                - VOSK_MODEL_PATH=/model
+              volumes:
+                - /home/${DEPLOY_USER}/model:/model:ro
+          YAML
+          sudo docker compose up -d --remove-orphans --build
           EOF
