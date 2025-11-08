@@ -1,0 +1,13 @@
+version: "3.8"
+services:
+  stt:
+    build: .
+    image: stt-service:latest
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-8000}:${APP_PORT:-8000}"
+    environment:
+      - VOSK_MODEL_PATH=/model
+      - APP_PORT=8000
+    volumes:
+      - ./model:/model:ro

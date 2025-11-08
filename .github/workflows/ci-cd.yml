@@ -1,0 +1,92 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r app/requirements.txt
+      - name: Download Vosk model for tests
+        run: bash scripts/download_model.sh ./model
+      - name: Run unit tests
+        run: |
+          pytest -q -m "not integration"
+      - name: Run integration tests
+        env:
+          VOSK_MODEL_PATH: ./model
+        run: pytest -q -m integration
+
+  build-and-push-image:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v5
+      - name: Build Docker image
+        run: docker build -t stt-service:latest .
+      - name: Save image tar
+        run: docker save stt-service:latest -o stt-service.tar
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: stt-service-image
+          path: stt-service.tar
+
+  deploy:
+    needs: build-and-push-image
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    steps:
+      - name: Download image artifact
+        uses: actions/download-artifact@v5
+        with:
+          name: stt-service-image
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.9.1
+        with:
+          ssh-private-key: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
+      - name: Copy image to server
+        run: |
+          scp stt-service.tar ${DEPLOY_USER}@${{ secrets.DEPLOY_HOST }}:~/stt-service.tar
+      - name: Copy model script to server
+        run: |
+          scp scripts/download_model.sh ${DEPLOY_HOST}@${{ secrets.DEPLOY_HOST }}:~/download_model.sh
+      - name: Prepare model on server
+        run: |
+          ssh ${DEPLOY_USER}@${{ secrets.DEPLOY_HOST }} << 'EOF'
+            set -e
+            chmod +x ~/download_model.sh
+            ~/download_model.sh ~/model
+          EOF
+      - name: Load and restart docker-compose on server
+        run: |
+          ssh ${DEPLOY_USER}@${{ secrets.DEPLOY_HOST }} << 'EOF'
+            set -e
+            docker load -i ~/stt-service.tar
+            mkdir -p ~/stt-deploy && cd ~/stt-deploy
+            cat > docker-compose.yml <<'YAML'
+            version: "3.8"
+            services:
+              stt:
+                image: stt-service:latest
+                restart: unless-stopped
+                ports:
+                  - "8000:8000"
+                environment:
+                  - VOSK_MODEL_PATH=/model
+                volumes:
+                  - /home/${DEPLOY_USER}/model:/model:ro
+            YAML
+            docker compose up -d --remove-orphans --build
+          EOF
