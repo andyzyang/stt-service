@@ -10,9 +10,9 @@ FastAPI service using VOSK for speech-to-text. Service accepts uploaded audio fi
 
   `sudo apt install ffmpeg`
 
-- curl (used by scripts to download models)
+- unzip (used to unzip VOSK model)
 
-  `sudo apt install curl`
+  `sudo apt install unzip`
 
 # Local development
 
