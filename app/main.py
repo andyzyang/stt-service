@@ -1,8 +1,9 @@
 from fastapi import FastAPI, UploadFile, File, HTTPException
-from fastapi.responses import JSONResponse
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
 from loguru import logger
 from contextlib import asynccontextmanager
+from pathlib import Path
 from .config import settings
 from .transcriber import Transcriber
 import os, tempfile, asyncio, aiofiles
@@ -28,7 +29,6 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="stt-service", lifespan=lifespan)
-app.add_middleware(CORSMiddleware, allow_origins=["*"], )
 
 
 @app.get("/health")
@@ -80,3 +80,12 @@ async def transcribe(file: UploadFile = File(...)):
             logger.exception("Transcription error: {}", e)
             raise HTTPException(status_code=500, detail="Transcription failed")
         return JSONResponse({"transcript": text})
+
+
+client_path = Path(__file__).parent.parent / "example_client" / "browser_client"
+app.mount("/client", StaticFiles(directory=client_path, html=True), name="client")
+
+
+@app.get("/")
+async def serve_index():
+    return FileResponse(client_path / "index.html")
