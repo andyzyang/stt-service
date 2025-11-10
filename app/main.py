@@ -48,7 +48,7 @@ def health():
 async def transcribe(file: UploadFile = File(...)):
     filename = file.filename or "upload"
     content = await file.read()
-    if not filename.lower().endswith((".wav", ".mp3", ".m4a", ".flac", ".ogg")):
+    if not filename.lower().endswith((".wav", ".mp3", ".m4a", ".flac", ".ogg", ".webm")):
         raise HTTPException(status_code=400, detail="Unsupported file extension")
     with tempfile.TemporaryDirectory() as tmp:
         in_path = os.path.join(tmp, "in")
