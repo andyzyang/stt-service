@@ -28,9 +28,10 @@ docker compose up --build
 
 ```
 pip install -r app/requirements.txt
-# run uni tests
+export PYTHONPATH=$PYTHONPATH:$(pwd)
+# run unit tests
 pytest -q -m "not integration"
-# run integration tests, needs ffmpeg installed and VOSK model
+# run integration tests, needs ffmpeg installed and VOSK model in /model
 pytest -q -m integration
 ```
 
@@ -57,6 +58,16 @@ ssh ubuntu@<SERVER_IP> 'docker load -i ~/stt-service.tar && cd ~/ && docker comp
 curl http://localhost:8000/health
 curl -X POST "http://localhost:8000/transcribe" -F "file=@example.wav"
 ```
+
+# Minimal client
+
+Serve locally:
+```
+cd example_client/browser_client
+# edit index.html, replace localhost with public server ip
+python3 -m http.server 5500
+```
+open http://localhost:5500
 
 # Supported formats and limits
 
