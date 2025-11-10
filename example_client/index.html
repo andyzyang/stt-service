@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+  <body>
+    <button id="rec">Record 5s</button>
+    <div id="res"></div>
+    <script>
+      document.getElementById('rec').onclick() = async function record(params) {
+          const stream = await navigator.mediaDevices.getUserMedia({audio: true});
+          const mediaRecorder = new MediaRecorder(stream);
+          const chunks = [];
+          mediaRecorder.ondataavailable = e => chunks.push(e.data);
+          mediaRecorder.onstop = async function onstop() {
+              const blob = new Blob(chunks, { type: 'audio/webm' });
+              const fd = new FormData();
+              fd.append('file', blob, 'rec.webm');
+              const response = await fetch('http://localhost:8000/transcribe', {method: 'POST', body: fd });
+              const json = await response.json();
+              document.getElementById('res').innerText = JSON.stringify(json);
+          };
+          mediaRecorder.start();
+          setTimeout(() => mediaRecorder.stop(), 5000);
+      };
+    </script>
+  </body>
+</html>
