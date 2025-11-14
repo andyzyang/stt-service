@@ -17,7 +17,7 @@ def load_model():
     model_path = os.environ.get("VOSK_MODEL_PATH", settings.VOSK_MODEL_PATH)
     try:
         transcriber = Transcriber(model_path)
-        logger.info("Loaded VOSK model from {}", model_path)
+        logger.info("TEST ******* Uploaded new VOSK model from {}", model_path)
     except Exception as e:
         logger.exception("Failed to load model: {}", e)
         raise
